@@ -29,7 +29,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { assertEquals } from "./dev_deps.ts";
+import { assertEquals, assertNotEquals } from "./dev_deps.ts";
 import { Node } from "./node.ts";
 const { test } = Deno;
 
@@ -38,6 +38,14 @@ interface TestRequest {
   isMatch: boolean;
   route: string;
   params?: Record<string, string>;
+}
+
+function getErr(func: () => void): Error | undefined {
+  try {
+    func();
+  } catch (e) {
+    return e;
+  }
 }
 
 function checkRequests(n: Node, requests: TestRequest[]): void {
@@ -187,4 +195,126 @@ test("node wildcard", function (): void {
       params: { user: "gordon", project: "go" },
     },
   ]);
+});
+
+test("node dupliate path", function (): void {
+  const n = new Node();
+  const routes = ["/", "/doc/", "/src/*", "/search/:query", "/user_:name"];
+  for (const r of routes) {
+    let err = getErr((): void => n.add(r, (): string => r));
+    assertEquals(err, undefined);
+    err = getErr((): void => n.add(r, (): string => r));
+    assertNotEquals(err, undefined);
+  }
+
+  checkRequests(n, [
+    { path: "/", isMatch: true, route: "/" },
+    { path: "/doc/", isMatch: true, route: "/doc/" },
+    {
+      path: "/src/some/file.png",
+      isMatch: false,
+      route: "",
+    },
+    {
+      path: "/search/someth!ng+in+ünìcodé",
+      isMatch: true,
+      route: "/search/:query",
+      params: { query: "someth!ng+in+ünìcodé" },
+    },
+    {
+      path: "/user_gopher",
+      isMatch: true,
+      route: "/user_:name",
+      params: { name: "gopher" },
+    },
+  ]);
+});
+
+test("node empty param name", function (): void {
+  const n = new Node();
+  const routes = ["/user:", "/user:/", "/cmd/:/", "/src/:"];
+  for (const r of routes) {
+    const err = getErr((): void => n.add(r, undefined!));
+    assertNotEquals(err, null);
+  }
+});
+
+test("node double wildcard", function (): void {
+  const errMsg = "only one wildcard per path segment is allowed";
+  const routes = ["/:foo:bar", "/:foo:bar/", "/:foo*"];
+  for (const r of routes) {
+    const n = new Node();
+    const err = getErr((): void => n.add(r, undefined!));
+    assertEquals(err!.message.startsWith(errMsg), true);
+  }
+});
+
+test("node trailing slash redirect", function (): void {
+  const n = new Node();
+  const routes = [
+    "/hi",
+    "/b/",
+    "/search/:query",
+    "/cmd/:tool/",
+    "/src/*",
+    "/x",
+    "/x/y",
+    "/y/",
+    "/y/z",
+    "/0/:id",
+    "/0/:id/1",
+    "/1/:id/",
+    "/1/:id/2",
+    "/aa",
+    "/a/",
+    "/admin",
+    "/admin/:category",
+    "/admin/:category/:page",
+    "/doc",
+    "/doc/go_faq.html",
+    "/doc/go1.html",
+    "/no/a",
+    "/no/b",
+    "/api/hello/:name",
+  ];
+  for (const r of routes) {
+    const err = getErr((): void => n.add(r, (): string => r));
+    assertEquals(err, undefined);
+  }
+
+  const tsrRoutes = [
+    "/hi/",
+    "/b",
+    "/search/gopher/",
+    "/cmd/vet",
+    "/src",
+    "/x/",
+    "/y",
+    "/0/go/",
+    "/1/go",
+    "/a",
+    "/admin/",
+    "/admin/config/",
+    "/admin/config/permissions/",
+    "/doc/",
+  ];
+  for (const r of tsrRoutes) {
+    const { func } = n.find(r);
+    assertEquals(func, undefined);
+  }
+
+  const noTsrRoutes = ["/", "/no", "/no/", "/_", "/_/", "/api/world/abc"];
+  for (const r of noTsrRoutes) {
+    const { func } = n.find(r);
+    assertEquals(func, undefined);
+  }
+});
+
+test("node root trailing slash redirect", function (): void {
+  const n = new Node();
+  const err = getErr((): void => n.add("/:test", (): string => "/:test"));
+  assertEquals(err, undefined);
+
+  const { func } = n.find("/");
+  assertEquals(func, undefined);
 });

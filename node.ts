@@ -21,7 +21,29 @@ export class Node {
     for (let i = 0; i < path.length; ++i) {
       if (isWildcard(path[i])) {
         n.#insert(path.slice(0, i));
-        for (; i < path.length && path[i] !== "/"; ++i);
+        const j = i;
+        ++i;
+        let invalid = false;
+        for (; i < path.length && path[i] !== "/"; ++i) {
+          if (isWildcard(path[i])) {
+            invalid = true;
+          }
+        }
+        if (invalid) {
+          throw new Error(
+            `only one wildcard per path segment is allowed, has: '${
+              path.slice(
+                j,
+                i,
+              )
+            }' in path '${path}'`,
+          );
+        }
+        if (path[j] === ":" && i - j === 1) {
+          throw new Error(
+            `param must be named with a non-empty name in path "${path}"`,
+          );
+        }
         n.#insert(path.slice(0, i));
       }
     }
@@ -127,9 +149,7 @@ export class Node {
 
     if (n.path === "" && n.children.size === 0) {
       n.path = path;
-      if (func) {
-        n.func = func;
-      }
+      n.func = func;
 
       return;
     }
@@ -161,6 +181,11 @@ export class Node {
         c = new Node({ path, func });
         n.children.set(path[0], c);
       } else if (func) {
+        if (n.func) {
+          throw new Error(
+            `a function is already registered for path "${path}"`,
+          );
+        }
         n.func = func;
       }
 
