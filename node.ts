@@ -4,7 +4,6 @@ type Func = Function | undefined;
 type Params = { key: string; value: string }[];
 
 export class Node {
-  parent: Node | undefined;
   children = new Map<string, Node>();
   path = "";
   func: Func;
@@ -54,7 +53,6 @@ export class Node {
           path: n.path.slice(i),
           children: n.children,
           func: n.func,
-          parent: n,
         });
 
         n.children = new Map([[c.path[0], c]]);
@@ -71,7 +69,7 @@ export class Node {
           continue;
         }
 
-        c = new Node({ path, func, parent: n });
+        c = new Node({ path, func });
         n.children.set(path[0], c);
       }
 

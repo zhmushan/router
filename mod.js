@@ -182,7 +182,6 @@ System.register("node", ["_util"], function (exports_2, context_2) {
                   path: n.path.slice(i),
                   children: n.children,
                   func: n.func,
-                  parent: n,
                 });
                 n.children = new Map([[c.path[0], c]]);
                 n.path = path.slice(0, i);
@@ -195,7 +194,7 @@ System.register("node", ["_util"], function (exports_2, context_2) {
                   n = c;
                   continue;
                 }
-                c = new Node({ path, func, parent: n });
+                c = new Node({ path, func });
                 n.children.set(path[0], c);
               }
               n.func = n.func ?? func;
