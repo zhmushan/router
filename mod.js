@@ -121,33 +121,6 @@ System.register("_util", [], function (exports_1, context_1) {
     return [path.slice(0, i), path.slice(i)];
   }
   exports_1("splitFromFirstSlash", splitFromFirstSlash);
-  function splitFromFirstWildcard(path) {
-    let i = 0;
-    for (; i < path.length && !isWildcard(path[i]); ++i);
-    return [path.slice(0, i), path.slice(i)];
-  }
-  exports_1("splitFromFirstWildcard", splitFromFirstWildcard);
-  function findFirstWildcard(path) {
-    let wildcard = "";
-    let pos = -1;
-    let i = 0;
-    for (; i < path.length; ++i) {
-      if (!isWildcard(path[i])) {
-        continue;
-      }
-      pos = i;
-      ++i;
-      for (; i < path.length; ++i) {
-        if (path[i] === "/") {
-          break;
-        }
-      }
-      wildcard = path.slice(pos, i);
-      break;
-    }
-    return { wildcard, pos };
-  }
-  exports_1("findFirstWildcard", findFirstWildcard);
   function isWildcard(c) {
     console.assert(c.length === 1);
     return c === ":" || c === "*";
