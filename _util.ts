@@ -6,6 +6,12 @@ export function longestCommonPrefix(a: string, b: string): number {
   return i;
 }
 
+export function splitFromFirstSlash(path: string): [string, string] {
+  let i = 0;
+  for (; i < path.length && path[i] !== "/"; ++i);
+  return [path.slice(0, i), path.slice(i)];
+}
+
 export function splitFromFirstWildcard(path: string): [string, string] {
   let i = 0;
   for (; i < path.length && !isWildcard(path[i]); ++i);
