@@ -1,0 +1,48 @@
+<head>
+  <style>
+    ul {
+      list-style: none;
+    }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import { Node } from "./mod.js";
+
+    const routes = [
+      "/",
+      "/cmd/:tool/:sub",
+      "/cmd/:tool/",
+      "/src/*filepath",
+      "/search/",
+      "/search/:query",
+      "/user_:name",
+      "/user_:name/about",
+      "/files/:dir/*filepath",
+      "/doc/",
+      "/doc/go_faq.html",
+      "/doc/go1.html",
+      "/info/:user/public",
+      "/info/:user/project/:project",
+    ];
+    const root = new Node();
+    for (const r of routes) {
+      root.add(r, undefined);
+    }
+
+    const el = buildTree(root);
+    document.body.appendChild(el);
+
+    function buildTree(n) {
+      const ul = document.createElement("ul");
+      const li = document.createElement("li");
+      li.innerText = n.path;
+      ul.appendChild(li);
+      for (const [_, c] of n.children) {
+        ul.appendChild(buildTree(c));
+      }
+
+      return ul;
+    }
+  </script>
+</body>
