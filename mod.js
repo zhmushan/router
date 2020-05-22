@@ -115,6 +115,12 @@ System.register("_util", [], function (exports_1, context_1) {
     return i;
   }
   exports_1("longestCommonPrefix", longestCommonPrefix);
+  function splitFromFirstSlash(path) {
+    let i = 0;
+    for (; i < path.length && path[i] !== "/"; ++i);
+    return [path.slice(0, i), path.slice(i)];
+  }
+  exports_1("splitFromFirstSlash", splitFromFirstSlash);
   function splitFromFirstWildcard(path) {
     let i = 0;
     for (; i < path.length && !isWildcard(path[i]); ++i);
@@ -172,7 +178,9 @@ System.register("node", ["_util"], function (exports_2, context_2) {
             let n = this;
             if (n.path === "" && n.children.size === 0) {
               n.path = path;
-              n.func = func;
+              if (func) {
+                n.func = func;
+              }
               return;
             }
             for (;;) {
@@ -196,8 +204,9 @@ System.register("node", ["_util"], function (exports_2, context_2) {
                 }
                 c = new Node({ path, func });
                 n.children.set(path[0], c);
+              } else if (func) {
+                n.func = func;
               }
-              n.func = n.func ?? func;
               break;
             }
           };
@@ -209,16 +218,90 @@ System.register("node", ["_util"], function (exports_2, context_2) {
           let n = this;
           for (let i = 0; i < path.length; ++i) {
             if (_util_ts_1.isWildcard(path[i])) {
-              n.#insert(path.slice(0, i), undefined);
+              n.#insert(path.slice(0, i));
               for (; i < path.length && path[i] !== "/"; ++i);
-              n.#insert(path.slice(0, i), undefined);
+              n.#insert(path.slice(0, i));
             }
           }
           n.#insert(path, func);
         }
         find(path) {
+          let n = this;
           let func;
-          const params = [];
+          let params;
+          for (;;) {
+            if (n.path === path) {
+              func = n.func;
+              break;
+            }
+            if (!_util_ts_1.isWildcard(n.path[0])) {
+              const lcp = _util_ts_1.longestCommonPrefix(n.path, path);
+              if (lcp !== n.path.length) {
+                break;
+              } else {
+                path = path.slice(lcp);
+              }
+            } else if (n.path[0] === ":") {
+              const [p, np] = _util_ts_1.splitFromFirstSlash(path);
+              if (!params) {
+                params = {};
+              }
+              params[n.path.slice(1)] = p;
+              path = np;
+            } else if (n.path[0] === "*") {
+              [, path] = _util_ts_1.splitFromFirstSlash(path);
+            }
+            if (!path) {
+              func = n.func;
+              break;
+            }
+            let c = n.children.get(path[0]);
+            if (c) {
+              const findResult = c.find(path);
+              if (findResult.func) {
+                func = findResult.func;
+                if (findResult.params) {
+                  if (!params) {
+                    params = findResult.params;
+                  } else if (findResult.params) {
+                    params = { ...params, ...findResult.params };
+                  }
+                }
+                break;
+              }
+            }
+            c = n.children.get(":");
+            if (c) {
+              const findResult = c.find(path);
+              if (findResult.func) {
+                func = findResult.func;
+                if (findResult.params) {
+                  if (!params) {
+                    params = findResult.params;
+                  } else if (findResult.params) {
+                    params = { ...params, ...findResult.params };
+                  }
+                }
+                break;
+              }
+            }
+            c = n.children.get("*");
+            if (c) {
+              const findResult = c.find(path);
+              if (findResult.func) {
+                func = findResult.func;
+                if (findResult.params) {
+                  if (!params) {
+                    params = findResult.params;
+                  } else if (findResult.params) {
+                    params = { ...params, ...findResult.params };
+                  }
+                }
+                break;
+              }
+            }
+            break;
+          }
           return { func, params };
         }
         #insert;

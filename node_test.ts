@@ -1,3 +1,34 @@
+// The following code is based off:
+// https://github.com/julienschmidt/httprouter
+//
+// Copyright (c) 2013, Julien Schmidt
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import { assertEquals } from "./dev_deps.ts";
 import { Node } from "./node.ts";
 const { test } = Deno;
@@ -6,16 +37,7 @@ interface TestRequest {
   path: string;
   isMatch: boolean;
   route: string;
-  params?: Map<string, string>;
-}
-
-function convertJSONToMap(obj: Record<string, any>): Map<string, any> {
-  const mp = new Map();
-  for (const k in obj) {
-    mp.set(k, obj[k]);
-  }
-
-  return mp;
+  params?: Record<string, string>;
 }
 
 function checkRequests(n: Node, requests: TestRequest[]): void {
@@ -94,19 +116,18 @@ test("node wildcard", function (): void {
       path: "/cmd/test/",
       isMatch: true,
       route: "/cmd/:tool/",
-      params: convertJSONToMap({ tool: "test" }),
+      params: { tool: "test" },
     },
-    // {
-    //   path: "/cmd/test",
-    //   isMatch: false,
-    //   route: "",
-    //   params: convertJSONToMap({ tool: "test" }),
-    // },
+    {
+      path: "/cmd/test",
+      isMatch: false,
+      route: "",
+    },
     {
       path: "/cmd/test/3",
       isMatch: true,
       route: "/cmd/:tool/:sub",
-      params: convertJSONToMap({ tool: "test", sub: "3" }),
+      params: { tool: "test", sub: "3" },
     },
     {
       path: "/src/",
@@ -123,48 +144,47 @@ test("node wildcard", function (): void {
       isMatch: false,
       route: "/src/*",
     },
-    // { path: "/search/", isMatch: true, route: "/search/" },
-    // {
-    //   path: "/search/someth!ng+in+ünìcodé",
-    //   isMatch: true,
-    //   route: "/search/:query",
-    //   params: convertJSONToMap({ query: "someth!ng+in+ünìcodé" }),
-    // },
-    // {
-    //   path: "/search/someth!ng+in+ünìcodé/",
-    //   isMatch: false,
-    //   route: "",
-    //   params: convertJSONToMap({ query: "someth!ng+in+ünìcodé" }),
-    // },
-    // {
-    //   path: "/user_gopher",
-    //   isMatch: true,
-    //   route: "/user_:name",
-    //   params: convertJSONToMap({ name: "gopher" }),
-    // },
+    { path: "/search/", isMatch: true, route: "/search/" },
+    {
+      path: "/search/someth!ng+in+ünìcodé",
+      isMatch: true,
+      route: "/search/:query",
+      params: { query: "someth!ng+in+ünìcodé" },
+    },
+    {
+      path: "/search/someth!ng+in+ünìcodé/",
+      isMatch: false,
+      route: "",
+    },
+    {
+      path: "/user_gopher",
+      isMatch: true,
+      route: "/user_:name",
+      params: { name: "gopher" },
+    },
     {
       path: "/user_gopher/about",
       isMatch: true,
       route: "/user_:name/about",
-      params: convertJSONToMap({ name: "gopher" }),
+      params: { name: "gopher" },
     },
     {
       path: "/files/js/framework.js",
       isMatch: true,
       route: "/files/:dir/*",
-      params: convertJSONToMap({ dir: "js" }),
+      params: { dir: "js" },
     },
     {
       path: "/info/gordon/public",
       isMatch: true,
       route: "/info/:user/public",
-      params: convertJSONToMap({ user: "gordon" }),
+      params: { user: "gordon" },
     },
     {
       path: "/info/gordon/project/go",
       isMatch: true,
       route: "/info/:user/project/:project",
-      params: convertJSONToMap({ user: "gordon", project: "go" }),
+      params: { user: "gordon", project: "go" },
     },
   ]);
 });

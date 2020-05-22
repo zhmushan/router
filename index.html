@@ -27,7 +27,7 @@
     ];
     const root = new Node();
     for (const r of routes) {
-      root.add(r, undefined);
+      root.add(r, () => r);
     }
 
     const el = buildTree(root);

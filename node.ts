@@ -29,10 +29,10 @@ export class Node {
     n.#insert(path, func);
   }
 
-  find(path: string): { func?: Function; params?: Map<string, string> } {
+  find(path: string): { func?: Function; params?: Record<string, string> } {
     let n: Node = this;
     let func: Function | undefined;
-    let params: Map<string, string> | undefined;
+    let params: Record<string, string> | undefined;
 
     for (;;) {
       if (n.path === path) {
@@ -52,9 +52,9 @@ export class Node {
       } else if (n.path[0] === ":") {
         const [p, np] = splitFromFirstSlash(path);
         if (!params) {
-          params = new Map();
+          params = {};
         }
-        params.set(n.path.slice(1), p);
+        params[n.path.slice(1)] = p;
         path = np;
       } else if (n.path[0] === "*") {
         [, path] = splitFromFirstSlash(path);
@@ -72,10 +72,9 @@ export class Node {
           func = findResult.func;
           if (findResult.params) {
             if (!params) {
-              params = new Map();
-            }
-            for (const [k, v] of findResult.params) {
-              params.set(k, v);
+              params = findResult.params;
+            } else if (findResult.params) {
+              params = { ...params, ...findResult.params };
             }
           }
 
@@ -90,10 +89,9 @@ export class Node {
           func = findResult.func;
           if (findResult.params) {
             if (!params) {
-              params = new Map();
-            }
-            for (const [k, v] of findResult.params) {
-              params.set(k, v);
+              params = findResult.params;
+            } else if (findResult.params) {
+              params = { ...params, ...findResult.params };
             }
           }
 
@@ -108,10 +106,9 @@ export class Node {
           func = findResult.func;
           if (findResult.params) {
             if (!params) {
-              params = new Map();
-            }
-            for (const [k, v] of findResult.params) {
-              params.set(k, v);
+              params = findResult.params;
+            } else if (findResult.params) {
+              params = { ...params, ...findResult.params };
             }
           }
 
@@ -130,7 +127,9 @@ export class Node {
 
     if (n.path === "" && n.children.size === 0) {
       n.path = path;
-      n.func = func;
+      if (func) {
+        n.func = func;
+      }
 
       return;
     }
@@ -161,7 +160,7 @@ export class Node {
 
         c = new Node({ path, func });
         n.children.set(path[0], c);
-      } else {
+      } else if (func) {
         n.func = func;
       }
 
