@@ -8,6 +8,8 @@ A high-performance basic router works everywhere.
 
 Server: [See zhmushan/abc](https://github.com/zhmushan/abc)
 
+React: Coming soon...
+
 Browser:
 
 ```html
@@ -17,22 +19,18 @@ Browser:
     import { Node } from "https://deno.land/x/router/mod.js";
 
     const root = new Node();
-    root.addRoute("/print_:info", c => {
+    root.add("/print_:info", (c) => {
       console.log(c.info);
     });
 
     btn.onclick = () => {
       const path = `/print_${randomStr()}`;
-      const [func, params, _] = root.getValue(path);
+      const { func, params } = root.find(path);
       if (func) {
-        const p = {};
-        for (const { key, value } of params) {
-          p[key] = value;
-        }
-        func(p);
+        func(params);
         history.replaceState(undefined, "", path);
       }
-    }
+    };
 
     function randomStr() {
       return Math.random().toString(32).split(".")[1];

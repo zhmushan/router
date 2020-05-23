@@ -10,14 +10,14 @@ jobs:
       - uses: actions/checkout@v2
       - uses: denolib/setup-deno@master
         with:
-          deno-version: 1.0.1
+          deno-version: 1.0.2
 
       - run: deno --version
       - run: deno fmt --check
       - run: deno test
 
-      # - name: Benchmarks
-      #   run: deno run --allow-net ./benchmarks/app.ts
+      - name: Benchmarks
+        run: deno run ./benchmarks/v1.ts
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'zhmushan/router'

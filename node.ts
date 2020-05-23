@@ -31,12 +31,12 @@ export class Node {
         }
         if (invalid) {
           throw new Error(
-            `only one wildcard per path segment is allowed, has: '${
+            `only one wildcard per path segment is allowed, has: "${
               path.slice(
                 j,
                 i,
               )
-            }' in path '${path}'`,
+            }" in path "${path}"`,
           );
         }
         if (path[j] === ":" && i - j === 1) {
@@ -71,15 +71,26 @@ export class Node {
         } else {
           path = path.slice(lcp);
         }
-      } else if (n.path[0] === ":") {
-        const [p, np] = splitFromFirstSlash(path);
+      } else {
+        if (n.path.length === 1) {
+          // Maybe "*"
+          func = n.func;
+          break;
+        }
+
+        const key = n.path.slice(1);
         if (!params) {
           params = {};
         }
-        params[n.path.slice(1)] = p;
-        path = np;
-      } else if (n.path[0] === "*") {
-        [, path] = splitFromFirstSlash(path);
+
+        if (n.path[0] === "*") {
+          params[key] = path;
+          path = "";
+        } else {
+          const [value, nextPath] = splitFromFirstSlash(path);
+          params[key] = value;
+          path = nextPath;
+        }
       }
 
       if (!path) {
