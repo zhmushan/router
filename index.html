@@ -25,7 +25,7 @@
       "/info/:user/public",
       "/info/:user/project/:project",
     ];
-    const root = new Node();
+    window.root = new Node();
     for (const r of routes) {
       root.add(r, () => r);
     }

@@ -134,7 +134,7 @@ System.register("_util", [], function (exports_1, context_1) {
 });
 System.register("node", ["_util"], function (exports_2, context_2) {
   "use strict";
-  var _util_ts_1, Node;
+  var _util_ts_1, Node, routes, root;
   var __moduleName = context_2 && context_2.id;
   return {
     setters: [
@@ -205,9 +205,9 @@ System.register("node", ["_util"], function (exports_2, context_2) {
               }
               if (invalid) {
                 throw new Error(
-                  `only one wildcard per path segment is allowed, has: '${
+                  `only one wildcard per path segment is allowed, has: "${
                     path.slice(j, i)
-                  }' in path '${path}'`,
+                  }" in path "${path}"`,
                 );
               }
               if (path[j] === ":" && i - j === 1) {
@@ -221,87 +221,92 @@ System.register("node", ["_util"], function (exports_2, context_2) {
           n.#insert(path, func);
         }
         find(path) {
-          let n = this;
           let func;
           let params;
-          for (;;) {
-            if (n.path === path) {
-              func = n.func;
-              break;
-            }
-            if (!_util_ts_1.isWildcard(n.path[0])) {
-              const lcp = _util_ts_1.longestCommonPrefix(n.path, path);
-              if (lcp !== n.path.length) {
-                break;
-              } else {
-                path = path.slice(lcp);
+          // node, path, vis
+          const stack = [[this, path, false]];
+          for (let i = 0; i >= 0;) {
+            const [n, p, v] = stack[i];
+            let np = p; // next path
+            if (v) {
+              --i;
+              // assert not "*"
+              if (n.path[0] === ":") {
+                params?.delete(n.path.slice(1));
               }
-            } else if (n.path[0] === ":") {
-              const [p, np] = _util_ts_1.splitFromFirstSlash(path);
-              if (!params) {
-                params = {};
-              }
-              params[n.path.slice(1)] = p;
-              path = np;
-            } else if (n.path[0] === "*") {
-              [, path] = _util_ts_1.splitFromFirstSlash(path);
+              continue;
+            } else {
+              // vis = true
+              stack[i][2] = true;
             }
-            if (!path) {
-              func = n.func;
-              break;
-            }
-            let c = n.children.get(path[0]);
-            if (c) {
-              const findResult = c.find(path);
-              if (findResult.func) {
-                func = findResult.func;
-                if (findResult.params) {
-                  if (!params) {
-                    params = findResult.params;
-                  } else if (findResult.params) {
-                    params = { ...params, ...findResult.params };
-                  }
+            if (n.path[0] === "*") {
+              if (n.path.length > 1) {
+                if (!params) {
+                  params = new Map();
                 }
+                params.set(n.path.slice(1), p);
+              }
+              func = n.func;
+              break;
+            } else if (n.path[0] === ":") {
+              if (!params) {
+                params = new Map();
+              }
+              const [s1, s2] = _util_ts_1.splitFromFirstSlash(p);
+              params.set(n.path.slice(1), s1);
+              np = s2;
+            } else {
+              if (n.path === p) {
+                func = n.func;
                 break;
               }
+              const lcp = _util_ts_1.longestCommonPrefix(n.path, p);
+              if (lcp !== n.path.length) {
+                --i;
+                continue;
+              } else {
+                np = p.slice(lcp);
+              }
+            }
+            let c = n.children.get("*");
+            if (c) {
+              stack[++i] = [c, np, false];
             }
             c = n.children.get(":");
             if (c) {
-              const findResult = c.find(path);
-              if (findResult.func) {
-                func = findResult.func;
-                if (findResult.params) {
-                  if (!params) {
-                    params = findResult.params;
-                  } else if (findResult.params) {
-                    params = { ...params, ...findResult.params };
-                  }
-                }
-                break;
-              }
+              stack[++i] = [c, np, false];
             }
-            c = n.children.get("*");
+            c = n.children.get(np[0]);
             if (c) {
-              const findResult = c.find(path);
-              if (findResult.func) {
-                func = findResult.func;
-                if (findResult.params) {
-                  if (!params) {
-                    params = findResult.params;
-                  } else if (findResult.params) {
-                    params = { ...params, ...findResult.params };
-                  }
-                }
-                break;
-              }
+              stack[++i] = [c, np, false];
             }
-            break;
           }
-          return { func, params };
+          return [func, params];
         }
         #insert;
       };
       exports_2("Node", Node);
+      routes = [
+        "/",
+        "/cmd/:tool/:sub",
+        "/cmd/:tool/",
+        "/src/*filepath",
+        "/search/",
+        "/search/:query",
+        "/user_:name",
+        "/user_:name/about",
+        "/files/:dir/*",
+        "/doc/",
+        "/doc/go_faq.html",
+        "/doc/go1.html",
+        "/info/:user/public",
+        "/info/:user/project/:project",
+      ];
+      root = new Node();
+      for (const r of routes) {
+        root.add(r, () => r);
+      }
+      root.find("/search/");
     },
   };
 });

@@ -37,7 +37,7 @@ interface TestRequest {
   path: string;
   isMatch: boolean;
   route: string;
-  params?: Record<string, string>;
+  params?: Map<string, string>;
 }
 
 function getErr(func: () => void): Error | undefined {
@@ -50,12 +50,15 @@ function getErr(func: () => void): Error | undefined {
 
 function checkRequests(n: Node, requests: TestRequest[]): void {
   for (const r of requests) {
-    const { func, params } = n.find(r.path);
+    const [func, params] = n.find(r.path);
     if (func === undefined) {
       assertEquals(r.isMatch, false);
     } else {
       assertEquals(r.isMatch, true);
       assertEquals(func(), r.route);
+    }
+    if (!r.params) {
+      r.params = new Map();
     }
     assertEquals(params, r.params);
   }
@@ -124,18 +127,22 @@ test("node wildcard", function (): void {
       path: "/cmd/test/",
       isMatch: true,
       route: "/cmd/:tool/",
-      params: { tool: "test" },
+      params: new Map([["tool", "test"]]),
     },
     {
       path: "/cmd/test",
       isMatch: false,
       route: "",
+      params: new Map([["tool", "test"]]),
     },
     {
       path: "/cmd/test/3",
       isMatch: true,
       route: "/cmd/:tool/:sub",
-      params: { tool: "test", sub: "3" },
+      params: new Map([
+        ["tool", "test"],
+        ["sub", "3"],
+      ]),
     },
     {
       path: "/src/",
@@ -146,20 +153,20 @@ test("node wildcard", function (): void {
       path: "/src/index.html",
       isMatch: true,
       route: "/src/*filepath",
-      params: { filepath: "index.html" },
+      params: new Map([["filepath", "index.html"]]),
     },
     {
       path: "/src/some/file.png",
       isMatch: true,
       route: "/src/*filepath",
-      params: { filepath: "some/file.png" },
+      params: new Map([["filepath", "some/file.png"]]),
     },
     { path: "/search/", isMatch: true, route: "/search/" },
     {
       path: "/search/someth!ng+in+ünìcodé",
       isMatch: true,
       route: "/search/:query",
-      params: { query: "someth!ng+in+ünìcodé" },
+      params: new Map([["query", "someth!ng+in+ünìcodé"]]),
     },
     {
       path: "/search/someth!ng+in+ünìcodé/",
@@ -170,31 +177,37 @@ test("node wildcard", function (): void {
       path: "/user_gopher",
       isMatch: true,
       route: "/user_:name",
-      params: { name: "gopher" },
+      params: new Map([["name", "gopher"]]),
     },
     {
       path: "/user_gopher/about",
       isMatch: true,
       route: "/user_:name/about",
-      params: { name: "gopher" },
+      params: new Map([["name", "gopher"]]),
     },
     {
       path: "/files/js/inc/framework.js",
       isMatch: true,
       route: "/files/:dir/*filepath",
-      params: { dir: "js", filepath: "inc/framework.js" },
+      params: new Map([
+        ["dir", "js"],
+        ["filepath", "inc/framework.js"],
+      ]),
     },
     {
       path: "/info/gordon/public",
       isMatch: true,
       route: "/info/:user/public",
-      params: { user: "gordon" },
+      params: new Map([["user", "gordon"]]),
     },
     {
       path: "/info/gordon/project/go",
       isMatch: true,
       route: "/info/:user/project/:project",
-      params: { user: "gordon", project: "go" },
+      params: new Map([
+        ["user", "gordon"],
+        ["project", "go"],
+      ]),
     },
   ]);
 });
@@ -221,13 +234,13 @@ test("node dupliate path", function (): void {
       path: "/search/someth!ng+in+ünìcodé",
       isMatch: true,
       route: "/search/:query",
-      params: { query: "someth!ng+in+ünìcodé" },
+      params: new Map([["query", "someth!ng+in+ünìcodé"]]),
     },
     {
       path: "/user_gopher",
       isMatch: true,
       route: "/user_:name",
-      params: { name: "gopher" },
+      params: new Map([["name", "gopher"]]),
     },
   ]);
 });
@@ -301,13 +314,13 @@ test("node trailing slash redirect", function (): void {
     "/doc/",
   ];
   for (const r of tsrRoutes) {
-    const { func } = n.find(r);
+    const [func] = n.find(r);
     assertEquals(func, undefined);
   }
 
   const noTsrRoutes = ["/", "/no", "/no/", "/_", "/_/", "/api/world/abc"];
   for (const r of noTsrRoutes) {
-    const { func } = n.find(r);
+    const [func] = n.find(r);
     assertEquals(func, undefined);
   }
 });
@@ -317,6 +330,6 @@ test("node root trailing slash redirect", function (): void {
   const err = getErr((): void => n.add("/:test", (): string => "/:test"));
   assertEquals(err, undefined);
 
-  const { func } = n.find("/");
+  const [func] = n.find("/");
   assertEquals(func, undefined);
 });

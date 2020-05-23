@@ -51,108 +51,77 @@ export class Node {
     n.#insert(path, func);
   }
 
-  find(path: string): { func?: Function; params?: Record<string, string> } {
-    let n: Node = this;
+  find(path: string): [Function | undefined, Map<string, string>] {
     let func: Function | undefined;
-    let params: Record<string, string> | undefined;
+    let params = new Map<string, string>();
+    // node, path, vis
+    const stack: [Node, string, boolean][] = [[this, path, false]];
 
-    for (;;) {
-      if (n.path === path) {
-        func = n.func;
+    for (let i = 0; i >= 0;) {
+      const [n, p, v] = stack[i];
+      let np = p; // next path
 
-        break;
-      }
-
-      if (!isWildcard(n.path[0])) {
-        const lcp = longestCommonPrefix(n.path, path);
-
-        if (lcp !== n.path.length) {
-          break;
-        } else {
-          path = path.slice(lcp);
+      if (v) {
+        --i;
+        // assert not "*"
+        if (n.path[0] === ":") {
+          params.delete(n.path.slice(1));
         }
+        continue;
       } else {
-        if (n.path.length === 1) {
-          // Maybe "*"
+        // vis = true
+        stack[i][2] = true;
+      }
+
+      if (n.path[0] === "*") {
+        if (n.path.length > 1) {
+          params.set(n.path.slice(1), p);
+        }
+        func = n.func;
+
+        break;
+      } else if (n.path[0] === ":") {
+        const [s1, s2] = splitFromFirstSlash(p);
+        params.set(n.path.slice(1), s1);
+        np = s2;
+      } else {
+        if (n.path === p) {
           func = n.func;
-          break;
+          np = "";
         }
 
-        const key = n.path.slice(1);
-        if (!params) {
-          params = {};
-        }
-
-        if (n.path[0] === "*") {
-          params[key] = path;
-          path = "";
+        const lcp = longestCommonPrefix(n.path, p);
+        if (lcp !== n.path.length) {
+          --i;
+          continue;
         } else {
-          const [value, nextPath] = splitFromFirstSlash(path);
-          params[key] = value;
-          path = nextPath;
+          np = p.slice(lcp);
         }
       }
 
-      if (!path) {
+      if (!np) {
         func = n.func;
+
         break;
       }
 
-      let c = n.children.get(path[0]);
+      let c = n.children.get("*");
       if (c) {
-        const findResult = c.find(path);
-        if (findResult.func) {
-          func = findResult.func;
-          if (findResult.params) {
-            if (!params) {
-              params = findResult.params;
-            } else if (findResult.params) {
-              params = { ...params, ...findResult.params };
-            }
-          }
-
-          break;
-        }
+        stack[++i] = [c, np, false];
       }
 
       c = n.children.get(":");
       if (c) {
-        const findResult = c.find(path);
-        if (findResult.func) {
-          func = findResult.func;
-          if (findResult.params) {
-            if (!params) {
-              params = findResult.params;
-            } else if (findResult.params) {
-              params = { ...params, ...findResult.params };
-            }
-          }
-
-          break;
-        }
+        stack[++i] = [c, np, false];
       }
 
-      c = n.children.get("*");
+      c = n.children.get(np[0]);
       if (c) {
-        const findResult = c.find(path);
-        if (findResult.func) {
-          func = findResult.func;
-          if (findResult.params) {
-            if (!params) {
-              params = findResult.params;
-            } else if (findResult.params) {
-              params = { ...params, ...findResult.params };
-            }
-          }
-
-          break;
-        }
+        stack[++i] = [c, np, false];
       }
-
-      break;
     }
 
-    return { func, params };
+    return [func, params];
   }
 
   #insert = (path: string, func?: Function): void => {
