@@ -1,6 +1,6 @@
 # Router
 
-A high-performance basic router works everywhere.
+A high-performance basic router works anywhere.
 
 [![tag](https://img.shields.io/github/tag/zhmushan/router.svg)](https://github.com/zhmushan/router)
 [![Build Status](https://github.com/zhmushan/router/workflows/ci/badge.svg?branch=master)](https://github.com/zhmushan/router/actions)
