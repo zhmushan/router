@@ -8,31 +8,34 @@ A high-performance basic router works everywhere.
 
 Server: [See zhmushan/abc](https://github.com/zhmushan/abc)
 
+React: Coming soon...
+
 Browser:
 
 ```html
 <body>
-  <button id="btn">Change Path</button>
+  <button id="change_path">Change Path</button>
+  <button id="home">Home</button>
   <script type="module">
-    import { Node } from "https://deno.land/x/router/mod.js";
+    import { Node } from "https://deno.land/x/router@v1.0.0-rc1/mod.js";
 
     const root = new Node();
-    root.addRoute("/print_:info", c => {
-      console.log(c.info);
+    root.add("/:random_string", (c) => {
+      console.log(c.get("random_string"));
     });
 
-    btn.onclick = () => {
-      const path = `/print_${randomStr()}`;
-      const [func, params, _] = root.getValue(path);
+    change_path.onclick = () => {
+      const path = `/${randomStr()}`;
+      const [func, params] = root.find(path);
       if (func) {
-        const p = {};
-        for (const { key, value } of params) {
-          p[key] = value;
-        }
-        func(p);
+        func(params);
         history.replaceState(undefined, "", path);
       }
-    }
+    };
+
+    home.onclick = () => {
+      history.replaceState(undefined, "", "/");
+    };
 
     function randomStr() {
       return Math.random().toString(32).split(".")[1];
