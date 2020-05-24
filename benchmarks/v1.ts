@@ -1,6 +1,5 @@
 import { bench, runIfMain } from "../dev_deps.ts";
 import { Node } from "../mod.ts";
-// import { Node } from "../_node.ts";
 import routes from "./routes.ts";
 
 bench({
