@@ -33,7 +33,7 @@ import {
   assertEquals,
   assertNotEquals,
 } from "./vendor/https/deno.land/std/testing/asserts.ts";
-import { Node } from "./node.ts";
+import { Node } from "./mod.ts";
 const { test } = Deno;
 
 interface TestRequest {
@@ -67,7 +67,7 @@ function checkRequests(n: Node, requests: TestRequest[]): void {
   }
 }
 
-test("node add and find", function (): void {
+test("add and find", function (): void {
   const n = new Node();
   const routes = [
     "/hi",
@@ -101,7 +101,7 @@ test("node add and find", function (): void {
   ]);
 });
 
-test("node wildcard", function (): void {
+test("wildcard", function (): void {
   const n = new Node();
   const routes = [
     "/",
@@ -215,7 +215,7 @@ test("node wildcard", function (): void {
   ]);
 });
 
-test("node dupliate path", function (): void {
+test("dupliate path", function (): void {
   const n = new Node();
   const routes = ["/", "/doc/", "/src/*", "/search/:query", "/user_:name"];
   for (const r of routes) {
@@ -248,7 +248,7 @@ test("node dupliate path", function (): void {
   ]);
 });
 
-test("node empty param name", function (): void {
+test("empty param name", function (): void {
   const n = new Node();
   const routes = ["/user:", "/user:/", "/cmd/:/", "/src/:"];
   for (const r of routes) {
@@ -257,7 +257,7 @@ test("node empty param name", function (): void {
   }
 });
 
-test("node double wildcard", function (): void {
+test("double wildcard", function (): void {
   const errMsg = "only one wildcard per path segment is allowed";
   const routes = ["/:foo:bar", "/:foo:bar/", "/:foo*"];
   for (const r of routes) {
@@ -267,9 +267,9 @@ test("node double wildcard", function (): void {
   }
 });
 
-test("node trailing slash redirect", function (): void {
+test("trailing slash", function (): void {
   const n = new Node();
-  const routes = [
+  let routes = [
     "/hi",
     "/b/",
     "/search/:query",
@@ -300,7 +300,7 @@ test("node trailing slash redirect", function (): void {
     assertEquals(err, undefined);
   }
 
-  const tsrRoutes = [
+  routes = [
     "/hi/",
     "/b",
     "/search/gopher/",
@@ -316,23 +316,75 @@ test("node trailing slash redirect", function (): void {
     "/admin/config/permissions/",
     "/doc/",
   ];
-  for (const r of tsrRoutes) {
+  for (const r of routes) {
     const [func] = n.find(r);
     assertEquals(func, undefined);
   }
 
-  const noTsrRoutes = ["/", "/no", "/no/", "/_", "/_/", "/api/world/abc"];
-  for (const r of noTsrRoutes) {
+  routes = ["/", "/no", "/no/", "/_", "/_/", "/api/world/abc"];
+  for (const r of routes) {
     const [func] = n.find(r);
     assertEquals(func, undefined);
   }
 });
 
-test("node root trailing slash redirect", function (): void {
+test("root trailing slash", function (): void {
   const n = new Node();
   const err = getErr((): void => n.add("/:test", (): string => "/:test"));
   assertEquals(err, undefined);
 
   const [func] = n.find("/");
   assertEquals(func, undefined);
+});
+
+test("static > param > any", function (): void {
+  const n = new Node();
+  const routes = [
+    "/*",
+    "/:username",
+    "/:username/:project",
+    "/zhmushan",
+    "/zhmushan/router",
+    "/zhmushan/:project",
+  ];
+  for (const r of routes) {
+    n.add(r, (): string => r);
+  }
+  checkRequests(n, [
+    { path: "/", isMatch: false, route: "" },
+    { path: "/zhmushan", isMatch: true, route: "/zhmushan" },
+    { path: "/zhmushan/", isMatch: true, route: "/*" },
+    {
+      path: "/zhmushan/abc",
+      isMatch: true,
+      route: "/zhmushan/:project",
+      params: new Map([["project", "abc"]]),
+    },
+    {
+      path: "/zhmushan/router",
+      isMatch: true,
+      route: "/zhmushan/router",
+    },
+    {
+      path: "/mushan",
+      isMatch: true,
+      route: "/:username",
+      params: new Map([["username", "mushan"]]),
+    },
+    { path: "/mushan/", isMatch: true, route: "/*" },
+    {
+      path: "/mushan/abc",
+      isMatch: true,
+      route: "/:username/:project",
+      params: new Map([
+        ["username", "mushan"],
+        ["project", "abc"],
+      ]),
+    },
+    {
+      path: "/mushan/abc/",
+      isMatch: true,
+      route: "/*",
+    },
+  ]);
 });

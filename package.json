@@ -1,0 +1,9 @@
+{
+  "name": "router",
+  "version": "1.0.0",
+  "main": "mod.js",
+  "type": "module",
+  "repository": "https://github.com/zhmushan/router",
+  "author": "木杉 <zhmushan@qq.com>",
+  "license": "MIT"
+}
