@@ -8,9 +8,9 @@ A high-performance basic router works anywhere.
 
 ## Features
 
-- **Based on [radix tree](https://en.wikipedia.org/wiki/Radix_tree)**: Compared with routers based on regular expressions, we have better performance in most of the cases, which can significantly increase the speed of your project, and as the project scale increases, the performance improvement will also increase exponentially.
+- **Based on [radix tree](https://en.wikipedia.org/wiki/Radix_tree)**: Compared with routers based on regular expressions, we have better performance in most of the cases, which can significantly increase the speed of your project, and as the project scale increases, the performance will also increase exponentially.
 
-- **Stupid rules**: We will always match according to the rules of "Static > Param > Any". For static routes, Match only strictly equal.
+- **Stupid rules**: We will always match according to the rules of "Static > Param > Any". For static routes, we always match strictly equal strings.
 
 ## Usage
 
