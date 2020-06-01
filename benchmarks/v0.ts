@@ -1,4 +1,7 @@
-import { bench, runIfMain } from "../dev_deps.ts";
+import {
+  bench,
+  runBenchmarks,
+} from "../vendor/https/deno.land/std/testing/bench.ts";
 import { Node } from "https://deno.land/x/router@v0.1.0/mod.ts";
 import routes from "./routes.ts";
 
@@ -33,4 +36,4 @@ bench({
   },
 });
 
-runIfMain(import.meta);
+runBenchmarks();

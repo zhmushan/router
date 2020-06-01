@@ -1,0 +1,14 @@
+{
+  "modules": [
+    {
+      "protocol": "https",
+      "path": "deno.land/std",
+      "version": "0.54.0",
+      "files": [
+        "/testing/asserts.ts",
+        "/testing/bench.ts"
+      ]
+    }
+  ],
+  "aliases": {}
+}

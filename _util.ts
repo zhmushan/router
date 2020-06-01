@@ -1,3 +1,5 @@
+import { assert } from "./vendor/https/deno.land/std/testing/asserts.ts";
+
 export function longestCommonPrefix(a: string, b: string): number {
   let i = 0;
   let len = Math.min(a.length, b.length);
@@ -13,7 +15,7 @@ export function splitFromFirstSlash(path: string): [string, string] {
 }
 
 export function isWildcard(c: string): boolean {
-  console.assert(c.length === 1);
+  assert(c.length === 1);
 
   return c === ":" || c === "*";
 }

@@ -29,7 +29,10 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { assertEquals, assertNotEquals } from "./dev_deps.ts";
+import {
+  assertEquals,
+  assertNotEquals,
+} from "./vendor/https/deno.land/std/testing/asserts.ts";
 import { Node } from "./node.ts";
 const { test } = Deno;
 
