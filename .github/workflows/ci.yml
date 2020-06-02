@@ -20,7 +20,7 @@ jobs:
         run: deno run ./benchmarks/v1.ts
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'zhmushan/router'
+        if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'zhmushan/router'
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
