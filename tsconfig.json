@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "declaration": true,
+    "declaration": true
   },
   "exclude": ["vendor", "benchmarks", "*test.ts"]
 }

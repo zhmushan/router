@@ -3,7 +3,7 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "0.54.0",
+      "version": "0.62.0",
       "files": [
         "/testing/asserts.ts",
         "/testing/bench.ts"

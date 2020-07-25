@@ -1,9 +1,19 @@
 {
   "name": "router",
   "version": "1.0.0",
-  "main": "mod.js",
-  "type": "module",
+  "main": "lib/cjs/mod.js",
+  "types": "lib/cjs/mod.d.ts",
+  "module": "mod.js",
   "repository": "https://github.com/zhmushan/router",
   "author": "木杉 <zhmushan@qq.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "run-p build:*",
+    "build:esm": "deno bundle mod.ts mod.js",
+    "build:cjs": "tsc -p tsconfig.cjs.json"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "typescript": "^3.9.7"
+  }
 }
