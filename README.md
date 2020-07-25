@@ -28,14 +28,17 @@ See [zhmushan/abc](https://github.com/zhmushan/abc)
 Installation:
 
 ```
-npm i zhmushan/router#v1.0.0
+npm i zhmushan/router#v1
 ```
 
 Create `index.js`:
 
 ```js
-import { createServer } from "http";
-import { Node } from "router";
+// import * as http from "http";
+// import { Node } from "router";
+
+const http = require("http");
+const Node = require("router").Node;
 
 const root = new Node();
 
@@ -43,7 +46,7 @@ root.add("/:user", (p) => {
   return p.get("user");
 });
 
-createServer((req, res) => {
+http.createServer((req, res) => {
   const [h, p] = root.find(req.url);
 
   if (h) {
@@ -55,9 +58,10 @@ createServer((req, res) => {
 }).listen(8080);
 
 console.log("server listening on http://localhost:8080");
+
 ```
 
-Make sure you have set `type: module` in `package.json`, then run:
+Run:
 
 ```
 node index.js
@@ -72,7 +76,7 @@ Browse to http://localhost:8080/your_name and you should see "your_name" on the 
   <button id="change_path">Change Path</button>
   <button id="home">Home</button>
   <script type="module">
-    import { Node } from "https://deno.land/x/router@v1.0.0/mod.js";
+    import { Node } from "https://deno.land/x/router@v1/mod.js";
 
     const root = new Node();
     root.add("/:random_string", (c) => {

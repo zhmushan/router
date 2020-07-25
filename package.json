@@ -1,6 +1,6 @@
 {
   "name": "router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "lib/cjs/mod.js",
   "types": "lib/cjs/mod.d.ts",
   "module": "mod.js",
