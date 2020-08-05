@@ -76,7 +76,7 @@ Browse to http://localhost:8080/your_name and you should see "your_name" on the 
   <button id="change_path">Change Path</button>
   <button id="home">Home</button>
   <script type="module">
-    import { Node } from "https://deno.land/x/router@v1/mod.js";
+    import { Node } from "https://deno.land/x/router@v1.0.1/mod.js";
 
     const root = new Node();
     root.add("/:random_string", (c) => {
