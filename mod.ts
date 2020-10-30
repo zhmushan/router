@@ -24,22 +24,20 @@ export class Node {
           n = n.#insert(path.slice(j, i));
           j = i;
         }
+
         ++i;
-        let invalid = false;
+
         for (; i < path.length && path[i] !== "/"; ++i) {
           if (isWildcard(path[i])) {
-            invalid = true;
+            throw new Error(
+              `only one wildcard per path segment is allowed, has: "${
+                path.slice(
+                  j,
+                  i,
+                )
+              }" in path "${path}"`,
+            );
           }
-        }
-        if (invalid) {
-          throw new Error(
-            `only one wildcard per path segment is allowed, has: "${
-              path.slice(
-                j,
-                i,
-              )
-            }" in path "${path}"`,
-          );
         }
         if (path[j] === ":" && i - j === 1) {
           throw new Error(
@@ -59,16 +57,20 @@ export class Node {
     }
   }
 
-  find(path: string): [Function | undefined, Map<string, string>] {
+  find(
+    path: string,
+  ): [func: Function | undefined, params: Map<string, string>] {
     let func: Function | undefined;
     let params = new Map<string, string>();
-    // node, path, vis
-    const stack: [Node, string, boolean][] = [[this, path, false]];
+
+    const stack: [node: Node, path: string, vis: boolean][] = [
+      [this, path, false],
+    ];
 
     for (let i = 0; i >= 0;) {
       const [n, p, v] = stack[i];
 
-      let np: string; // next path
+      let np: string | undefined; // next path
 
       if (v) {
         --i;
@@ -86,16 +88,23 @@ export class Node {
         if (n.path.length > 1) {
           params.set(n.path.slice(1), p);
         }
-        np = "";
+        np = undefined;
       } else if (n.path[0] === ":") {
-        const [s1, s2] = splitFromFirstSlash(p);
-        params.set(n.path.slice(1), s1);
-        np = s2;
-      } else {
-        if (n.path === p) {
-          np = "";
+        const [_cp, _np] = splitFromFirstSlash(p);
+        params.set(n.path.slice(1), _cp);
+        np = _np === "" ? undefined : _np;
+      } else if (n.path === p) {
+        if (n.func === undefined) {
+          if (n.children.has("*")) {
+            np = "";
+          } else {
+            --i;
+            continue;
+          }
+        } else {
+          np = undefined;
         }
-
+      } else {
         const lcp = longestCommonPrefix(n.path, p);
         if (lcp !== n.path.length) {
           --i;
@@ -105,20 +114,18 @@ export class Node {
         }
       }
 
-      if (!np) {
-        if (n.func) {
-          func = n.func;
-
-          break;
-        }
-
-        --i;
-        continue;
+      if (np === undefined) {
+        func = n.func;
+        break;
       }
 
       let c = n.children.get("*");
       if (c) {
         stack[++i] = [c, np, false];
+      }
+
+      if (np === "") {
+        continue;
       }
 
       c = n.children.get(":");
@@ -223,7 +230,9 @@ function longestCommonPrefix(a: string, b: string): number {
   return i;
 }
 
-function splitFromFirstSlash(path: string): [string, string] {
+function splitFromFirstSlash(
+  path: string,
+): [cp: string, np: string] {
   let i = 0;
   for (; i < path.length && path[i] !== "/"; ++i);
   return [path.slice(0, i), path.slice(i)];

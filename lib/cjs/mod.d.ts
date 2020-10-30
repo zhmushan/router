@@ -5,5 +5,5 @@ export declare class Node {
   func: Function | undefined;
   constructor(node?: Partial<Node>);
   add(path: string, func: Function): void;
-  find(path: string): [Function | undefined, Map<string, string>];
+  find(path: string): [func: Function | undefined, params: Map<string, string>];
 }

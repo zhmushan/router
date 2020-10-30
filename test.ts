@@ -149,8 +149,9 @@ test("wildcard", function (): void {
     },
     {
       path: "/src/",
-      isMatch: false,
-      route: "",
+      isMatch: true,
+      route: "/src/*filepath",
+      params: new Map([["filepath", ""]]),
     },
     {
       path: "/src/index.html",
@@ -351,7 +352,7 @@ test("static > param > any", function (): void {
     n.add(r, (): string => r);
   }
   checkRequests(n, [
-    { path: "/", isMatch: false, route: "" },
+    { path: "/", isMatch: true, route: "/*" },
     { path: "/zhmushan", isMatch: true, route: "/zhmushan" },
     { path: "/zhmushan/", isMatch: true, route: "/*" },
     {
