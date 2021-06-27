@@ -1,16 +1,16 @@
-export class Node {
-  children = new Map<string, Node>();
+export class Node<T = Function> {
+  children = new Map<string, Node<T>>();
   path = "";
-  func: Function | undefined;
+  handler: T | undefined;
 
-  constructor(node?: Partial<Node>) {
+  constructor(node?: Partial<Node<T>>) {
     if (node) {
       Object.assign(this, node);
     }
   }
 
-  add(path: string, func: Function): void {
-    let n: Node = this;
+  add(path: string, handler: T): void {
+    let n: Node<T> = this;
 
     let i = 0;
     for (; i < path.length && !isWildcard(path[i]); ++i);
@@ -51,19 +51,19 @@ export class Node {
     }
 
     if (j === path.length) {
-      n.#merge("", func);
+      n.#merge("", handler);
     } else {
-      n.#insert(path.slice(j), func);
+      n.#insert(path.slice(j), handler);
     }
   }
 
   find(
     path: string,
-  ): [func: Function | undefined, params: Map<string, string>] {
-    let func: Function | undefined;
+  ): [handler: T | undefined, params: Map<string, string>] {
+    let handler: T | undefined;
     let params = new Map<string, string>();
 
-    const stack: [node: Node, path: string, vis: boolean][] = [
+    const stack: [node: Node<T>, path: string, vis: boolean][] = [
       [this, path, false],
     ];
 
@@ -94,7 +94,7 @@ export class Node {
         params.set(n.path.slice(1), _cp);
         np = _np === "" ? undefined : _np;
       } else if (n.path === p) {
-        if (n.func === undefined) {
+        if (n.handler === undefined) {
           if (n.children.has("*")) {
             np = "";
           } else {
@@ -115,7 +115,7 @@ export class Node {
       }
 
       if (np === undefined) {
-        func = n.func;
+        handler = n.handler;
         break;
       }
 
@@ -139,26 +139,26 @@ export class Node {
       }
     }
 
-    return [func, params];
+    return [handler, params];
   }
 
-  #merge = (path: string, func?: Function): Node => {
-    let n: Node = this;
+  #merge = (path: string, handler?: T): Node<T> => {
+    let n: Node<T> = this;
 
     if (n.path === "" && n.children.size === 0) {
       n.path = path;
-      n.func = func;
+      n.handler = handler;
 
       return n;
     }
 
     if (path === "") {
-      if (n.func) {
+      if (n.handler) {
         throw new Error(
-          `a function is already registered for path "${n.path}"`,
+          `a handler is already registered for path "${n.path}"`,
         );
       }
-      n.func = func;
+      n.handler = handler;
 
       return n;
     }
@@ -170,12 +170,12 @@ export class Node {
         const c = new Node({
           path: n.path.slice(i),
           children: n.children,
-          func: n.func,
+          handler: n.handler,
         });
 
         n.children = new Map([[c.path[0], c]]);
         n.path = path.slice(0, i);
-        n.func = undefined;
+        n.handler = undefined;
       }
 
       if (i < path.length) {
@@ -187,16 +187,16 @@ export class Node {
           continue;
         }
 
-        c = new Node({ path, func });
+        c = new Node({ path, handler });
         n.children.set(path[0], c);
         n = c;
-      } else if (func) {
-        if (n.func) {
+      } else if (handler) {
+        if (n.handler) {
           throw new Error(
-            `a function is already registered for path "${path}"`,
+            `a handler is already registered for path "${path}"`,
           );
         }
-        n.func = func;
+        n.handler = handler;
       }
 
       break;
@@ -205,15 +205,15 @@ export class Node {
     return n;
   };
 
-  #insert = (path: string, func?: Function): Node => {
-    let n: Node = this;
+  #insert = (path: string, handler?: T): Node<T> => {
+    let n: Node<T> = this;
 
     let c = n.children.get(path[0]);
 
     if (c) {
-      n = c.#merge(path, func);
+      n = c.#merge(path, handler);
     } else {
-      c = new Node({ path, func });
+      c = new Node({ path, handler });
       n.children.set(path[0], c);
       n = c;
     }
