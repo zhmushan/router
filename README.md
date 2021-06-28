@@ -82,7 +82,7 @@ page.
   <button id="change_path">Change Path</button>
   <button id="home">Home</button>
   <script type="module">
-    import { Node } from "https://deno.land/x/router@v2.0.0/mod.js";
+    import { Node } from "https://deno.land/x/router@v2.0.1/mod.js";
 
     const root = new Node();
     root.add("/:random_string", (c) => {
