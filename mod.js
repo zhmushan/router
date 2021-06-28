@@ -1,12 +1,13 @@
 class Node1 {
   children = new Map();
   path = "";
+  handler;
   constructor(node) {
     if (node) {
       Object.assign(this, node);
     }
   }
-  add(path, func) {
+  add(path, handler) {
     let n = this;
     let i = 0;
     for (; i < path.length && !isWildcard(path[i]); ++i);
@@ -38,13 +39,13 @@ class Node1 {
       }
     }
     if (j === path.length) {
-      n.#merge("", func);
+      n.#merge("", handler);
     } else {
-      n.#insert(path.slice(j), func);
+      n.#insert(path.slice(j), handler);
     }
   }
   find(path) {
-    let func;
+    let handler;
     let params = new Map();
     const stack = [
       [
@@ -75,7 +76,7 @@ class Node1 {
         params.set(n.path.slice(1), _cp);
         np = _np === "" ? undefined : _np;
       } else if (n.path === p) {
-        if (n.func === undefined) {
+        if (n.handler === undefined) {
           if (n.children.has("*")) {
             np = "";
           } else {
@@ -95,7 +96,7 @@ class Node1 {
         }
       }
       if (np === undefined) {
-        func = n.func;
+        handler = n.handler;
         break;
       }
       let c = n.children.get("*");
@@ -127,24 +128,22 @@ class Node1 {
       }
     }
     return [
-      func,
+      handler,
       params,
     ];
   }
-  #merge = (path, func) => {
+  #merge = (path, handler) => {
     let n = this;
     if (n.path === "" && n.children.size === 0) {
       n.path = path;
-      n.func = func;
+      n.handler = handler;
       return n;
     }
     if (path === "") {
-      if (n.func) {
-        throw new Error(
-          `a function is already registered for path "${n.path}"`,
-        );
+      if (n.handler) {
+        throw new Error(`a handler is already registered for path "${n.path}"`);
       }
-      n.func = func;
+      n.handler = handler;
       return n;
     }
     for (;;) {
@@ -153,7 +152,7 @@ class Node1 {
         const c = new Node1({
           path: n.path.slice(i),
           children: n.children,
-          func: n.func,
+          handler: n.handler,
         });
         n.children = new Map([
           [
@@ -162,7 +161,7 @@ class Node1 {
           ],
         ]);
         n.path = path.slice(0, i);
-        n.func = undefined;
+        n.handler = undefined;
       }
       if (i < path.length) {
         path = path.slice(i);
@@ -173,31 +172,29 @@ class Node1 {
         }
         c = new Node1({
           path,
-          func,
+          handler,
         });
         n.children.set(path[0], c);
         n = c;
-      } else if (func) {
-        if (n.func) {
-          throw new Error(
-            `a function is already registered for path "${path}"`,
-          );
+      } else if (handler) {
+        if (n.handler) {
+          throw new Error(`a handler is already registered for path "${path}"`);
         }
-        n.func = func;
+        n.handler = handler;
       }
       break;
     }
     return n;
   };
-  #insert = (path, func) => {
+  #insert = (path, handler) => {
     let n = this;
     let c = n.children.get(path[0]);
     if (c) {
-      n = c.#merge(path, func);
+      n = c.#merge(path, handler);
     } else {
       c = new Node1({
         path,
-        func,
+        handler,
       });
       n.children.set(path[0], c);
       n = c;
@@ -205,7 +202,6 @@ class Node1 {
     return n;
   };
 }
-export { Node1 as Node };
 function longestCommonPrefix(a, b) {
   let i = 0;
   let len = Math.min(a.length, b.length);
@@ -235,3 +231,4 @@ class AssertionError extends Error {
     this.name = "AssertionError";
   }
 }
+export { Node1 as Node };

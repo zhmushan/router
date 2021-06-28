@@ -1,9 +1,9 @@
-export declare class Node {
+export declare class Node<T = Function> {
   #private;
-  children: Map<string, Node>;
+  children: Map<string, Node<T>>;
   path: string;
-  func: Function | undefined;
-  constructor(node?: Partial<Node>);
-  add(path: string, func: Function): void;
-  find(path: string): [func: Function | undefined, params: Map<string, string>];
+  handler: T | undefined;
+  constructor(node?: Partial<Node<T>>);
+  add(path: string, handler: T): void;
+  find(path: string): [handler: T | undefined, params: Map<string, string>];
 }
