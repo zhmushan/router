@@ -230,3 +230,4 @@ class AssertionError extends Error {
     this.name = "AssertionError";
   }
 }
+export { Node1 as Node };
