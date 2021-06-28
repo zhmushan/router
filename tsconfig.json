@@ -2,5 +2,5 @@
   "compilerOptions": {
     "declaration": true
   },
-  "exclude": ["vendor", "benchmarks", "*test.ts"]
+  "exclude": ["vendor", "benchmarks", "*test.ts", "docs"]
 }

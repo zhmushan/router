@@ -1,6 +1,7 @@
 class Node1 {
   children = new Map();
   path = "";
+  handler;
   constructor(node) {
     if (node) {
       Object.assign(this, node);
